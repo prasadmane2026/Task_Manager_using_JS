@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager - Kanban Board</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f7ff',
+                            500: '#4f46e5',
+                            600: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#f6f8fa] text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Top Navigation -->
+    <header class="w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <!-- Brand Logo & Title (Links back to Landing Page) -->
+            <a href="index.html" class="flex items-center gap-3 flex-shrink-0 group" title="Return to Landing Page">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">Project Tasks</h1>
+                    <p class="text-xs text-slate-400 font-medium">Kanban Board &bull; Team Workspace</p>
+                </div>
+            </a>
+
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button id="reset-board-btn" type="button" class="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all flex items-center gap-1.5" title="Reset sample tasks">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span class="hidden sm:inline">Reset Data</span>
+                </button>
+                <button id="toggle-modal" type="button" class="bg-slate-900 hover:bg-slate-800 active:scale-95 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Add Task</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-start">
+        
+        <!-- White Theme Kanban Board Outer Container -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/40 p-4 sm:p-6 lg:p-8">
+            <section class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100 gap-6 md:gap-0">
+                
+                <!-- 1. TO DO COLUMN -->
+                <div id="todo" class="task-column flex flex-col md:px-5 first:pl-0 last:pr-0">
+                    <!-- Column Header -->
+                    <div class="flex items-center justify-between mb-5 select-none">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-800">To Do</h2>
+                            <span class="count-badge ml-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tasks List Container -->
+                    <div class="tasks-container flex-1 flex flex-col gap-3 min-h-[160px]">
+                        <!-- Tasks dynamically injected here -->
+                    </div>
+
+                    <!-- Add Task Column Button -->
+                    <button type="button" class="column-add-task-btn mt-3 w-full py-2.5 rounded-2xl border border-dashed border-slate-200 hover:border-slate-300 text-slate-400 hover:text-slate-600 hover:bg-slate-50/70 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all" data-status="todo">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Add task</span>
+                    </button>
+                </div>
+
+                <!-- 2. IN PROGRESS COLUMN -->
+                <div id="progress" class="task-column flex flex-col md:px-5 first:pl-0 last:pr-0">
+                    <!-- Column Header -->
+                    <div class="flex items-center justify-between mb-5 select-none">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-800">In Progress</h2>
+                            <span class="count-badge ml-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tasks List Container -->
+                    <div class="tasks-container flex-1 flex flex-col gap-3 min-h-[160px]">
+                        <!-- Tasks dynamically injected here -->
+                    </div>
+
+                    <!-- Add Task Column Button -->
+                    <button type="button" class="column-add-task-btn mt-3 w-full py-2.5 rounded-2xl border border-dashed border-slate-200 hover:border-slate-300 text-slate-400 hover:text-slate-600 hover:bg-slate-50/70 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all" data-status="progress">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Add task</span>
+                    </button>
+                </div>
+
+                <!-- 3. DONE COLUMN -->
+                <div id="done" class="task-column flex flex-col md:px-5 first:pl-0 last:pr-0">
+                    <!-- Column Header -->
+                    <div class="flex items-center justify-between mb-5 select-none">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-800">Done</h2>
+                            <span class="count-badge ml-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tasks List Container -->
+                    <div class="tasks-container flex-1 flex flex-col gap-3 min-h-[160px]">
+                        <!-- Tasks dynamically injected here -->
+                    </div>
+
+                    <!-- Add Task Column Button -->
+                    <button type="button" class="column-add-task-btn mt-3 w-full py-2.5 rounded-2xl border border-dashed border-slate-200 hover:border-slate-300 text-slate-400 hover:text-slate-600 hover:bg-slate-50/70 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all" data-status="done">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Add task</span>
+                    </button>
+                </div>
+
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Create / Edit Modal -->
+    <div class="modal fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="modal-bg absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
+        
+        <!-- Modal Card -->
+        <div class="modal-dialog relative bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-7 flex flex-col gap-5 z-10 transform transition-all">
+            <!-- Header -->
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span id="modal-icon-badge" class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </span>
+                    <h3 id="modal-heading" class="text-lg font-bold text-slate-900">Add New Task</h3>
+                </div>
+                <button type="button" id="close-modal-btn" class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Form Content -->
+            <form id="task-form" class="flex flex-col gap-4" onsubmit="return false;">
+                <!-- Title -->
+                <div>
+                    <label for="task-title" class="block text-xs font-semibold text-slate-700 mb-1.5">Task Title *</label>
+                    <input type="text" id="task-title" placeholder="e.g. Design landing page" required
+                        class="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-50/80 focus:bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm text-slate-800 placeholder:text-slate-400 transition-all font-medium">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="task-description" class="block text-xs font-semibold text-slate-700 mb-1.5">Description</label>
+                    <textarea id="task-description" placeholder="Brief summary of the task..." rows="3"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-50/80 focus:bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm text-slate-800 placeholder:text-slate-400 transition-all font-medium resize-none"></textarea>
+                </div>
+
+                <!-- Row: Status & Color Theme -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="task-status" class="block text-xs font-semibold text-slate-700 mb-1.5">Column</label>
+                        <select id="task-status" class="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                            <option value="todo">To Do</option>
+                            <option value="progress">In Progress</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="task-color" class="block text-xs font-semibold text-slate-700 mb-1.5">Accent Color</label>
+                        <select id="task-color" class="w-full px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                            <option value="purple">Purple</option>
+                            <option value="blue">Blue</option>
+                            <option value="emerald">Emerald</option>
+                            <option value="amber">Amber</option>
+                            <option value="rose">Rose</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row: Assignee & Due Date -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="task-assignee" class="block text-xs font-semibold text-slate-700 mb-1.5">Assignee Initials</label>
+                        <input type="text" id="task-assignee" placeholder="e.g. AK" maxlength="3"
+                            class="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-50/80 focus:bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-semibold text-slate-800 uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 transition-all">
+                    </div>
+                    <div>
+                        <label for="task-date" class="block text-xs font-semibold text-slate-700 mb-1.5">Due Date</label>
+                        <input type="text" id="task-date" placeholder="e.g. May 20"
+                            class="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-slate-50/80 focus:bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-semibold text-slate-800 placeholder:font-normal placeholder:text-slate-400 transition-all">
+                    </div>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" id="cancel-modal-btn" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit" id="add-new-task" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 shadow-md shadow-slate-900/10 hover:shadow-lg transition-all flex items-center gap-1.5">
+                        <span id="modal-submit-text">Add Task</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Undo Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
+

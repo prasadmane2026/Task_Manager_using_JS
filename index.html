@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Manage your team tasks in one simple step</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#4f46e5',
+                            600: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Smooth Custom Mouse Cursor Follower */
+        #cursor-dot, #cursor-follower {
+            pointer-events: none;
+            position: fixed;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            will-change: left, top, width, height, transform;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #cursor-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #4f46e5;
+            z-index: 100;
+        }
+
+        #cursor-follower {
+            width: 42px;
+            height: 42px;
+            border: 1.5px solid rgba(79, 70, 229, 0.45);
+            background-color: rgba(79, 70, 229, 0.07);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.22);
+            z-index: 99;
+            backdrop-filter: blur(0.5px);
+            transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                        height 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                        background-color 0.25s ease, 
+                        border-color 0.25s ease,
+                        opacity 0.3s ease;
+        }
+
+        #cursor-follower.hovered {
+            width: 68px;
+            height: 68px;
+            border-color: rgba(79, 70, 229, 0.85);
+            background-color: rgba(79, 70, 229, 0.14);
+            box-shadow: 0 0 35px rgba(99, 102, 241, 0.35);
+        }
+
+        /* 3D Perspective Stage */
+        .stage-3d {
+            perspective: 1300px;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D Stack Container with Isometric Orientation */
+        .card-stack {
+            position: relative;
+            width: 350px;
+            height: 360px;
+            transform-style: preserve-3d;
+            transform: rotateX(15deg) rotateY(-18deg) rotateZ(4deg);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Continuous gentle floating motion after entrance */
+        .floating-active {
+            animation: floatStackMotion 6s ease-in-out infinite alternate 2.2s;
+        }
+
+        @keyframes floatStackMotion {
+            0% {
+                transform: rotateX(15deg) rotateY(-18deg) rotateZ(4deg) translateY(0px);
+            }
+            100% {
+                transform: rotateX(18deg) rotateY(-15deg) rotateZ(5deg) translateY(-14px);
+            }
+        }
+
+        /* Interactive 3D Exploded View on Hover */
+        .card-stack:hover {
+            transform: rotateX(10deg) rotateY(-10deg) rotateZ(1deg) translateY(-6px);
+        }
+        .card-stack:hover .stack-card-main {
+            transform: translate3d(0, -12px, 80px) rotate(-1deg);
+            box-shadow: 0 35px 70px -15px rgba(79, 70, 229, 0.22), 0 15px 25px -8px rgba(15, 23, 42, 0.08);
+        }
+        .card-stack:hover .stack-card-completed {
+            transform: translate3d(45px, 65px, 35px) rotate(3deg);
+        }
+        .card-stack:hover .stack-card-progress {
+            transform: translate3d(-55px, -45px, 10px) rotate(-5deg);
+        }
+        .card-stack:hover .stack-card-base {
+            transform: translate3d(-25px, 95px, -35px) rotate(5deg);
+        }
+
+        /* ==========================================================
+           SEQUENTIAL STACKING ENTRANCE ANIMATIONS ("Ek ke upar ek")
+           ========================================================== */
+        
+        /* 1. Base card lands first */
+        .stack-card-base {
+            position: absolute;
+            top: 45px;
+            left: -10px;
+            width: 310px;
+            height: 180px;
+            border-radius: 1.25rem;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.7);
+            box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.06);
+            transform-style: preserve-3d;
+            opacity: 0;
+            animation: dropBase 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 2. In Progress card drops in from top-left */
+        .stack-card-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 310px;
+            border-radius: 1.25rem;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.85);
+            box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.09);
+            transform-style: preserve-3d;
+            opacity: 0;
+            animation: dropProgress 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 3. Completed card slides in from bottom-right */
+        .stack-card-completed {
+            position: absolute;
+            top: 35px;
+            left: 20px;
+            width: 310px;
+            border-radius: 1.25rem;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.85);
+            box-shadow: 0 25px 45px -12px rgba(15, 23, 42, 0.1);
+            transform-style: preserve-3d;
+            opacity: 0;
+            animation: dropCompleted 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 4. Main Hero card drops directly on top of the stack */
+        .stack-card-main {
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            width: 330px;
+            border-radius: 1.25rem;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 
+                0 30px 60px -15px rgba(15, 23, 42, 0.16),
+                0 10px 20px -8px rgba(15, 23, 42, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            transform-style: preserve-3d;
+            opacity: 0;
+            animation: dropMain 1.15s cubic-bezier(0.34, 1.35, 0.64, 1) 0.95s forwards;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+        }
+
+        @keyframes dropBase {
+            from {
+                opacity: 0;
+                transform: translate3d(-100px, 120px, -100px) scale(0.8);
+            }
+            to {
+                opacity: 0.9;
+                transform: translate3d(-15px, 65px, -30px) rotate(3deg) scale(1);
+            }
+        }
+
+        @keyframes dropProgress {
+            from {
+                opacity: 0;
+                transform: translate3d(-180px, -150px, 120px) rotate(-18deg) scale(0.85);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(-40px, -25px, 0px) rotate(-3deg) scale(1);
+            }
+        }
+
+        @keyframes dropCompleted {
+            from {
+                opacity: 0;
+                transform: translate3d(180px, 160px, 100px) rotate(16deg) scale(0.85);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(25px, 45px, 20px) rotate(2deg) scale(1);
+            }
+        }
+
+        @keyframes dropMain {
+            from {
+                opacity: 0;
+                transform: translate3d(0, -240px, 220px) rotate(12deg) scale(1.18);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 50px) rotate(-1deg) scale(1);
+            }
+        }
+
+        /* Ambient Light Glow */
+        .ambient-glow {
+            background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.06) 40%, transparent 70%);
+        }
+    </style>
+</head>
+<body class="bg-[#fcfdfe] text-slate-900 font-sans min-h-screen flex flex-col justify-between selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden">
+
+    <!-- Custom Smooth Mouse Cursor Follower Elements -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-follower"></div>
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-[#fcfdfe]/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform duration-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg font-extrabold text-slate-900 tracking-tight leading-tight flex items-center gap-1.5">
+                        TaskFlow
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">PRO</span>
+                    </span>
+                    <span class="text-xs text-slate-400 font-medium">Visual Kanban Suite</span>
+                </div>
+            </a>
+
+            <!-- Single Right CTA (Points to Kanban Board) -->
+            <div class="flex items-center gap-3">
+                <a href="board.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 shadow-md shadow-slate-900/15 hover:shadow-xl transition-all">
+                    <span>Open Board</span>
+                    <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section (Matches reference image pixel-for-pixel) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-20 flex flex-col justify-center">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            
+            <!-- Left Hero Content -->
+            <div class="lg:col-span-6 flex flex-col items-start z-10">
+                
+                <!-- Pill Badge matching reference image -->
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50/80 border border-indigo-100/80 text-[11px] font-bold text-indigo-600 tracking-wider uppercase mb-7 select-none">
+                    <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                    <span>NEXT-GEN WORKFLOW SOLUTION</span>
+                </div>
+
+                <!-- Headline with exact breaks and indigo highlights -->
+                <h1 class="text-4xl sm:text-5xl lg:text-[62px] font-black text-slate-950 tracking-tight leading-[1.08]">
+                    Manage your team<br />
+                    tasks in <span class="text-indigo-600">one simple<br />step.</span>
+                </h1>
+
+                <!-- Subtitle text matching reference image -->
+                <p class="text-sm sm:text-base text-slate-500 font-normal leading-relaxed max-w-md mt-6">
+                    Experience the death of old-school project management. Organize, track, and collaborate with your team using our ultra-smooth interactive Kanban board.
+                </p>
+
+                <!-- Primary CTA Button matching reference image (Points to Kanban Board) -->
+                <div class="pt-8 flex items-center gap-3">
+                    <a href="board.html" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-base font-bold shadow-xl shadow-indigo-600/35 hover:shadow-2xl hover:shadow-indigo-600/50 transition-all">
+                        <span>Launch Kanban Board &rarr;</span>
+                    </a>
+                    <!-- Replay Animation Button -->
+                    <button id="replay-btn" type="button" class="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all" title="Replay Stacking Animation">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Right Hero Visual: Exact 3D Card Stack Stacking Animation -->
+            <div class="lg:col-span-6 relative flex items-center justify-center min-h-[460px] sm:min-h-[500px]">
+                
+                <!-- Ambient Subtle Glow -->
+                <div class="absolute inset-0 ambient-glow rounded-full filter blur-2xl opacity-70 pointer-events-none scale-125"></div>
+
+                <!-- 3D Perspective Stage -->
+                <div class="stage-3d w-full max-w-[420px] h-[400px] flex items-center justify-center">
+                    
+                    <!-- 3D Card Stack Container -->
+                    <div id="card-stack-container" class="card-stack floating-active">
+
+                        <!-- 1. BASE CARD (Underneath Stack) -->
+                        <div class="stack-card-base select-none">
+                            <div class="p-4 flex flex-col gap-2">
+                                <div class="w-16 h-2 bg-slate-100 rounded-full"></div>
+                                <div class="w-32 h-2 bg-slate-100 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. IN PROGRESS CARD (Top-Left Layer matching image) -->
+                        <div class="stack-card-progress p-4 sm:p-5 select-none">
+                            <!-- Header -->
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-700">In Progress</span>
+                                </div>
+                                <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100/60">Active</span>
+                            </div>
+                            <!-- Skeleton content matching screenshot -->
+                            <div class="space-y-2">
+                                <div class="w-4/5 h-2 bg-slate-100 rounded-full"></div>
+                                <div class="w-3/5 h-2 bg-slate-100 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. COMPLETED CARD (Bottom-Right Layer matching image) -->
+                        <div class="stack-card-completed p-4 sm:p-5 select-none">
+                            <!-- Header -->
+                            <div class="flex items-center justify-end mb-3">
+                                <span class="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                                    <span>Completed</span>
+                                </span>
+                            </div>
+                            <!-- Progress bar line matching screenshot -->
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-3">
+                                <div class="bg-emerald-500 h-full w-4/5 rounded-full"></div>
+                            </div>
+                            <div class="w-1/2 h-2 bg-slate-100 rounded-full"></div>
+                        </div>
+
+                        <!-- 4. MAIN FRONT CARD (Demo Task Kanban - Points to Board) -->
+                        <div class="stack-card-main p-5 sm:p-6 select-none cursor-pointer" onclick="window.location.href='board.html'">
+                            
+                            <!-- Header: Icon + Title/Priority + To Do Badge -->
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start gap-3">
+                                    <!-- Document Icon in rounded square -->
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <h3 class="text-sm sm:text-base font-extrabold text-slate-800 leading-snug">Demo Task Kanban</h3>
+                                        <span class="text-[11px] text-slate-400 font-medium italic mt-0.5">High Priority</span>
+                                    </div>
+                                </div>
+                                <!-- To Do Badge -->
+                                <span class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100/70">To Do</span>
+                            </div>
+
+                            <!-- Description -->
+                            <p class="text-xs text-slate-500 font-normal leading-relaxed mt-3.5">
+                                Create dynamic task manager board with smooth 3D animations and local storage...
+                            </p>
+
+                            <!-- Footer: Overlapping Avatars + Date -->
+                            <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100">
+                                <!-- Overlapping Avatars (AK and JD) -->
+                                <div class="flex items-center -space-x-1.5">
+                                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white shadow-sm">AK</span>
+                                    <span class="w-6 h-6 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white shadow-sm">JD</span>
+                                </div>
+                                <!-- Due Date -->
+                                <span class="text-xs font-semibold text-slate-400">May 25</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Smooth Mouse Follower & Stacking Replay Script -->
+    <script>
+        // Smooth Cursor Follower Implementation
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorFollower = document.getElementById('cursor-follower');
+
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let followerX = mouseX;
+        let followerY = mouseY;
+        let isCursorActive = false;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            if (!isCursorActive) {
+                cursorDot.style.opacity = '1';
+                cursorFollower.style.opacity = '1';
+                followerX = mouseX;
+                followerY = mouseY;
+                isCursorActive = true;
+            }
+
+            cursorDot.style.left = `${mouseX}px`;
+            cursorDot.style.top = `${mouseY}px`;
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursorDot.style.opacity = '0';
+            cursorFollower.style.opacity = '0';
+            isCursorActive = false;
+        });
+
+        // Fluid linear interpolation (LERP) loop for trailing circular follower
+        function renderFollower() {
+            followerX += (mouseX - followerX) * 0.12;
+            followerY += (mouseY - followerY) * 0.12;
+
+            cursorFollower.style.left = `${followerX}px`;
+            cursorFollower.style.top = `${followerY}px`;
+
+            requestAnimationFrame(renderFollower);
+        }
+        requestAnimationFrame(renderFollower);
+
+        // Interactive expansion on hoverable elements
+        const interactiveSelectors = 'a, button, .cursor-pointer, input, select';
+        document.querySelectorAll(interactiveSelectors).forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorFollower.classList.add('hovered');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorFollower.classList.remove('hovered');
+            });
+        });
+
+        // Replay Stacking Animation
+        const replayBtn = document.getElementById('replay-btn');
+        const stackContainer = document.getElementById('card-stack-container');
+
+        if (replayBtn && stackContainer) {
+            replayBtn.addEventListener('click', () => {
+                stackContainer.classList.remove('floating-active');
+                const cards = stackContainer.querySelectorAll('.stack-card-base, .stack-card-progress, .stack-card-completed, .stack-card-main');
+                cards.forEach(card => {
+                    card.style.animation = 'none';
+                    card.offsetHeight; /* trigger reflow */
+                });
+                cards[0].style.animation = 'dropBase 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards';
+                cards[1].style.animation = 'dropProgress 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards';
+                cards[2].style.animation = 'dropCompleted 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards';
+                cards[3].style.animation = 'dropMain 1.15s cubic-bezier(0.34, 1.35, 0.64, 1) 0.95s forwards';
+                
+                setTimeout(() => {
+                    stackContainer.classList.add('floating-active');
+                }, 2200);
+            });
+        }
+    </script>
+</body>
+</html>

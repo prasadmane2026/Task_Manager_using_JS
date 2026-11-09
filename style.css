@@ -1,0 +1,194 @@
+/* ==========================================================
+   KANBAN BOARD - ULTRA MODERN WHITE THEME (3D & ANIMATIONS)
+   ========================================================== */
+
+/* Root smooth scrolling & antialiasing */
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================
+   1. 3D CARD STYLING & DEPTH
+   ========================================================== */
+.task-card {
+    position: relative;
+    background-color: #ffffff;
+    border-radius: 1rem; /* 16px */
+    border: 1px solid rgba(226, 232, 240, 0.85); /* slate-200 */
+    box-shadow: 
+        0 1px 3px 0 rgba(15, 23, 42, 0.04),
+        0 3px 8px 0 rgba(15, 23, 42, 0.02),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    cursor: grab;
+    transform: translateY(0) translateZ(0);
+    transform-style: preserve-3d;
+    transition: 
+        transform 0.25s cubic-bezier(0.2, 0, 0, 1),
+        box-shadow 0.25s cubic-bezier(0.2, 0, 0, 1),
+        border-color 0.2s ease,
+        opacity 0.2s ease;
+    will-change: transform, box-shadow;
+    user-select: none;
+}
+
+/* 3D Hover Elevation */
+.task-card:hover {
+    transform: translateY(-4px) scale(1.008) rotateX(1deg);
+    border-color: rgba(203, 213, 225, 0.9);
+    box-shadow: 
+        0 12px 24px -4px rgba(15, 23, 42, 0.08),
+        0 4px 10px -2px rgba(15, 23, 42, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.task-card:active {
+    cursor: grabbing;
+    transform: translateY(-2px) scale(0.995);
+}
+
+/* 3D Dragging State */
+.task-card.dragging {
+    opacity: 0.35 !important;
+    transform: scale(0.97) rotate(1.5deg) !important;
+    border: 1.5px dashed #818cf8 !important;
+    box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* ==========================================================
+   2. DROP INDICATOR LINE ANIMATION ("Line behind the card")
+   ========================================================== */
+.drop-indicator-line {
+    width: 100%;
+    height: 3.5px;
+    background: linear-gradient(90deg, #6366f1 0%, #38bdf8 50%, #10b981 100%);
+    border-radius: 9999px;
+    margin: 6px 0;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.65), 0 0 4px rgba(56, 189, 248, 0.5);
+    animation: dropLinePulse 1.2s infinite ease-in-out;
+    pointer-events: none;
+    transition: all 0.15s ease-out;
+}
+
+@keyframes dropLinePulse {
+    0%, 100% {
+        opacity: 0.7;
+        transform: scaleY(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scaleY(1.8);
+        box-shadow: 0 0 18px rgba(99, 102, 241, 0.85), 0 0 8px rgba(56, 189, 248, 0.7);
+    }
+}
+
+/* ==========================================================
+   3. COLUMN DRAG OVER HIGHLIGHT
+   ========================================================== */
+.task-column.hover-over {
+    background-color: rgba(248, 250, 252, 0.8);
+    border-radius: 1.25rem;
+    outline: 2px dashed #818cf8;
+    outline-offset: -2px;
+}
+
+/* ==========================================================
+   4. MODAL POPUP & TRANSITIONS
+   ========================================================== */
+.modal {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out;
+}
+
+.modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal .modal-dialog {
+    transform: scale(0.95) translateY(12px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal.active .modal-dialog {
+    transform: scale(1) translateY(0);
+}
+
+/* ==========================================================
+   5. SLEEK SCROLLBARS
+   ========================================================== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ==========================================================
+   6. TOAST NOTIFICATION & UNDO
+   ========================================================== */
+.toast-item {
+    pointer-events: auto;
+    background-color: #0f172a;
+    color: #ffffff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 1rem;
+    box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transform: translateY(16px) scale(0.96);
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast-item.show {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+/* ==========================================================
+   7. EMPTY COLUMN STATE
+   ========================================================== */
+.empty-column-placeholder {
+    padding: 2.25rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1.5px dashed #e2e8f0;
+    border-radius: 1rem;
+    color: #94a3b8;
+    background-color: rgba(248, 250, 252, 0.5);
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+/* ==========================================================
+   8. DONE SPARKLE CELEBRATION
+   ========================================================== */
+@keyframes celebrationPulse {
+    0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+    50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.task-card.sparkle {
+    animation: celebrationPulse 0.6s ease-out;
+}
